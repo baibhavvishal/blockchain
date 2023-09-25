@@ -58,33 +58,42 @@ contract VotingSystem {
         return count;
     }
     
-    // Function to allow users to vote for a candidate
-     function vote(uint256 _candidateIndex, address _voterAddress, address _tokenAddress) public {
-        require(electionActive, "Election is not active.");
-        require(!hasVoted[_voterAddress], "You have already voted.");
+   // Event to log the vote with timestamp and block height
+    event Voted(address indexed voter, uint256 candidateIndex, uint256 voteTimestamp, uint256 voteBlockHeight);
 
-        // Create an instance of the ERC20 token interface
-        IERC20 token = IERC20(_tokenAddress);
+// Function to allow users to vote for a candidate
+    function vote(uint256 _candidateIndex, address _voterAddress, address _tokenAddress) public {
+    require(electionActive, "Election is not active.");
+    require(!hasVoted[_voterAddress], "You have already voted.");
 
-        // Check the voter's token balance
-        uint256 tokenBalance = token.balanceOf(_voterAddress);
-        require(tokenBalance > 0, "You do not have any tokens to vote.");
+    // Create an instance of the ERC20 token interface
+    IERC20 token = IERC20(_tokenAddress);
 
-        // Ensure the voter has enough tokens to vote
-        require(token.transferFrom(_voterAddress, address(this), 1), "Vote transfer failed.");
+    // Check the voter's token balance
+    uint256 tokenBalance = token.balanceOf(_voterAddress);
+    require(tokenBalance > 0, "You do not have any tokens to vote.");
 
-        // Update vote count for the candidate
-        candidates[_candidateIndex].voteCount++;
+    // Ensure the voter has enough tokens to vote
+    require(token.transferFrom(_voterAddress, address(this), 1), "Vote transfer failed.");
 
-        // Mark the voter as voted
-        hasVoted[_voterAddress] = true;
+    // Record timestamp and block height
+    uint256 voteTimestamp = block.timestamp;
+    uint256 voteBlockHeight = block.number;
 
-        // Add the voter to the list
-        voters.push(_voterAddress);
+    // Update vote count for the candidate
+    candidates[_candidateIndex].voteCount++;
 
-        // Emit the vote event
-        emit Voted(_voterAddress, _candidateIndex);
-    }
+    // Mark the voter as voted
+    hasVoted[_voterAddress] = true;
+
+    // Add the voter to the list
+    voters.push(_voterAddress);
+
+    // Emit the vote event with timestamp and block height
+    emit Voted(_voterAddress, _candidateIndex, voteTimestamp, voteBlockHeight);
+}
+
+
 
     
     // Function to view the election results
